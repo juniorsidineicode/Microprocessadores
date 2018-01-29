@@ -1,0 +1,60 @@
+Enuciado:
+
+2) Faça um pograma que apresente uma contagem cíclica cres-
+cente de 0 a FFH na porta P1. Inserir atraso entre incre-
+mentos da contagem tal que a mesma ocorra mais lentamente
+(há um exemplo de rotina de atraso no roteiro do laborátó-
+rio anterior). Este programa deve também aceitar a /INT0
+(acionada por borda). Durante a realização da contagem,
+a solicitação da /INT0 deve interrompar a contagem ou deve
+reiniciar a contagem, se a mesma estiver parada.
+
+
+RESET 		EQU 00H
+ITINT0		EQU 03H ;LOCAL DO TRATADOR EXT0
+STATE1		EQU 20H 
+ATRASO		EQU 0EFH
+;END0		EQU P3.3
+;END1 		EQU P3.4
+;CS 		EQU P0.7
+
+			ORG	RESET ;PC='0' DPS DO RESET
+			JMP INICIO
+		
+			ORG ITINT0 ;LOCAL DO TRATADOR DE INTERRUPÇÃO EX0
+			JMP HANDLER
+		
+INICIO: 	MOV IE, #10000001B ;HABILITA INT0 (EX0)
+			SETB IT0 ;BORDA DESCIDA 
+;			CLR END0 ;END0 = '0'
+;			CLR END1 ;END1 = '1' PARA ACESSAR O DISP0
+;			SETB CS ;PARA ACESSAR OS DISPLAYS
+			MOV STATE1, #00H
+			MOV R1, #00H ;COMEÇAR A CONTAGEM CRESCENTE
+CONTAGEM:	MOV R0, STATE1
+			CJNE R0, #0, CONTAGEM ;VAI TRANCAR A CONTAGEM QUANDO ACONTECER UMA INTERRUPÇÃO
+			MOV A, R1
+			MOV DPTR, #TABELA
+			CALL CONVERTE
+			MOV P1, A ;JOGAR VALOR DE A NA PORTA P1
+			MOV A, #ATRASO ;TEMPO PARA DELAY
+			CALL DELAY
+			INC R1
+			CJNE R1, #0FFH, CONTAGEM
+			JMP CONTAGEM 
+				
+CONVERTE:	MOVC A, @A+DPTR ;APONTA NA TABELA A POSIÇÃO DE MEMÓRIA QUE PEGAREMOS O NUM, E PASSA O CONTEUDO
+			RET ;RETORNA AO CODIGO PRINCIPAL
+
+DELAY:		DJNZ ACC, DELAY
+			RET 
+
+HANDLER: 	CPL 0H  ;COLOCA 0h ='1'
+			;JB STATE1, HANDLER
+			RETI 
+
+TABELA:		DB 40H, 79H, 24H, 30H, 19H,12H, 02H, 78H, 00H, 10H, 08H, 03H, 46H, 21H, 06H, 0EH			
+			
+			END
+		 
+;INTERRUPÇÃO EXTERNA PORTA 3 -> P3.2 INT0 P3.3 INT1		

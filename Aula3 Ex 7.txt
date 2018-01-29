@@ -1,0 +1,45 @@
+Enunciado: 
+Faça um programa que teste a chave conectada a p2.7. Se a
+mesma estiver fechada (p2.7 = '0'), rotacione um led aceso
+para a esquerda (p2.6 = '1') ou para a direita (p2.6 = '0')
+especificado pelo complemento do valor das 4 chaves menos
+significativas (p2.3 a p2.0). Se a chave p2.7 estiver aber-
+ta, fique aguardando ser alterada.
+
+
+
+
+
+;PROGRAMA mostraleds.asm
+
+ATRASO 		EQU	0EFH
+CS			EQU P0.7
+END0		EQU P3.3
+END1		EQU P3.4
+	
+			ORG 0H
+			CLR CS
+			CLR END0
+			CLR END1
+			CLR A
+			MOV P1, #01H ;ACENDER 1 LED
+			MOV R0, #00H ;VAI GUARDAR OS 4 BITS MENOS SIGNIFICATIVOS DAS CHAVES P2
+AGUARDA:	JB P2.7, AGUARDA ;SALTA PARA AGUARDA QUANDO P2.7 = '1'
+			MOV A, P2 ;COLOCA P2 EM A
+			XCHD A, @R0 ;COLOCA OS 4 BITS MENOS SIGNIFICATIVOS EM R0
+			MOV A, P1 
+			JB P2.6, ESQUERDA ; SE P2.6 = '1' PULA PARA ESQUERDA 
+			CALL DIREITA ;SE P2.6 = '0' CHAMA A SUBROTINA DIREITA
+			JMP FIM 
+ESQUERDA:	RL A ;ROTACIONAR PARA ESQUERDA
+			MOV P1, A ;MOSTRA NOS LEDS
+			DJNZ R0, ESQUERDA ;DECREMENTAR R0 QUE CONTEM A QUANTIDADE DE VEZES PARA ROTACIONAR
+			JMP FIM
+DIREITA:	RR A ;ROTACIONAR PARA DIREITA
+			MOV P1, A ;MOSTRAR NOS LEDS
+			DJNZ R0, DIREITA ;DECREMENTAR R0 QUE CONTEM A QUANTIDADE DE VEZES PARA ROTACIONAR
+			RET			
+;DELAY:		DJNZ ATRASO, DELAY		
+;			RET
+FIM:		JMP FIM			
+			END

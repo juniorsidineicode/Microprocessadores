@@ -1,0 +1,30 @@
+Enunciado:
+4) Fazer um programa que escreva os números de 1 a 5, em 
+posições consecutivas de memória, na memória interna a
+partir de 50H e na memória externa a partir de 2200H;
+
+
+
+
+;PROGRAMA EX4.ASM
+RESET EQU 0H
+	
+		ORG RESET
+		MOV R0, #5H ;FAZER O LOOP, E IR DECREMENTANDO O VALOR DE R0
+		MOV A, #1H ;VALOR DO ACC QUE COLOCAREMOS NAS POSIÇÕES DE MEMORIAS
+		MOV R1, #50H ;VALOR DA PRIMEIRA POSIÇÃO DE MEMÓRIA INTERNA
+		MOV DPTR, #2200H ;VALOR DA PRIMEIRA POSIÇÃO DE MEMÓRIA EXTERNA
+LOOP:	MOV @R1, A ;COLOCAMOS O VALOR DO ACUMULADOR (1H) NA POSIÇÃO DE MEMÓRIA GUARDADO EM R1 (I:50H) NA PRIMEIRA VOLTA
+		MOVX @DPTR, A ;ESCREVEMOS O VALOR DO ACUMULADOR (1H) NA POSIÇÃO DE MEMÓRIA GUARDADO EM DPTR (X:2200H) NA PRIMEIRA VOLTA
+		INC A ;INCREMENTA VALOR DE A => A=1+1
+		INC R1 ;INCREMENTA VALOR DE R1 => R1=(51H)
+		INC DPTR ;INCREMENTA VALOR DE DPTR => DPTR = 2201H
+		DJNZ R0, LOOP 
+FIM:	JMP FIM
+		END
+
+
+OBS:
+Sempre que quiser escrever na memória ram externa, precisa-
+mos usar o MOVX e um DPTR que é o ponteiro de onde queremos
+aramzenar o dado;

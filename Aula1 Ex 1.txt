@@ -1,0 +1,11 @@
+c:00 - > EA (MOVER O QUE TEM EM R2 PARA A)
+C:01 - > 25 (SOMAR O QUE TEM EM A COM 01)
+C:02 - > 01 (ESTA SOMANDO I:01)
+C:03 - > 85 (MOVER O CONTEUDO DO ACC PARA 00)
+C:04 - > E0
+C:05 - > 01
+C:06 - > 80 (SHORT JUMP PARA 00H, REPETIRO CODIGO!) 
+C:07 - > F8
+
+Pega o que tem em R2 e soma com o q tem na posição de me-
+mória i:01 e mostra em 00;

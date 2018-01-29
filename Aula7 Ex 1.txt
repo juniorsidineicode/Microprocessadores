@@ -1,0 +1,49 @@
+ENUNCIADO:
+
+1) Modifique o programa acima para que o mesmo apenas receba
+dados e os armazene na memória interna entre os endereços
+30H e 35H. Armazenar os dados de forma cíclica; ou seja, ao
+término do preenchimento de i:0x35, voltar a preencher a par-
+tir de i0x30. Para enviar dado para a recepção serial pela
+DEBUG SESSION, tem-se que digitar (por exemplo) SIN=0X33 na
+janela de comando do KEIL  (no prompt > janela de comando).
+
+
+
+
+
+
+RESET 		EQU 00H
+LTSERIAL	EQU 23H ; local tratador
+STATE 		EQU 20H
+			
+			ORG RESET ;PC=0 depois de reset
+			JMP INICIO
+			
+			ORG LTSERIAL
+			SETB F0 ;REGISTRADOR DE PROPOSITO GERAL DO PSW
+			RETI
+			
+INICIO: 	MOV IE,#10010000B
+			MOV SCON,#01010000B ;MODO 1 COM O MODO RECEPÇÃO SETADO! REN = '1'
+			MOV TMOD,#00100000B ;MODO 2 DO TIMER1 -> CONTADOR DE 8 BITS, TH1 REABASTECE TL1
+			MOV TH1,#0FDH
+			MOV TL1,#0FDH
+			MOV PCON,#0H ;SMOD -> 0, INFLUI NO BAUD RATE 
+			SETB TR1 ;DA O START NO TIMER
+			
+VOLTA0:		MOV R1,#30H ;APONTA PARA MEMORIA INTERNA DE POSIÇÃO 30H
+VOLTA: 		JNB F0, VOLTA
+			CLR F0   ;LIMPA O BIT DE F0
+			MOV @R1, SBUF ;COPIA DO SBUF PARA A POSIÇÃO DE MEMÓRIA APONTADA POR R1
+			INC R1 ;INCREMENTA PARA MUDAR DE POSIÇÃO  DE MEMÓRIA
+			CJNE R1,#36H, VOLTA
+			JMP VOLTA0
+			
+TABELA: 	DB 'Microcontrolador'
+			END
+			
+
+OBS:
+(i) para escrever e gerar a interrupção serial basta escrever no prompt de comando: SIN=0X33
+	

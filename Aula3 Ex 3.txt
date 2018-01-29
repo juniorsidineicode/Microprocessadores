@@ -1,0 +1,39 @@
+Enunciado:
+
+3) Modifique o programa anterior para realizar uma conta-
+gem decrescente (9 a 0) no display 0. Para tal, seu códi-
+go deve possuir rotina de atraso entre apresentações da 
+contagem, tal que seja possível visualizar a mesma. 
+
+
+
+
+;Programa MOSTRA1.asm
+CS 			EQU P0.7
+END0		EQU P3.3
+END1		EQU P3.4
+ATRASO		EQU 0EFH
+
+			ORG 0H 
+			CLR END0 ;END0 E END1 SÃO PARA ESCOLHER O DISPLAY QUE IREMOS MOSTRAR
+			CLR END1 ;END0 E END1 = 00 ESTAMOS NO DISP0
+			SETB CS ;FAZEMOS CS=1 PARA USAR O DECODER E PODER ACESSAR OS DISPLAYS
+			MOV R1, #09H ;numero para decrementarmos
+INICIO:		MOV A, R1
+			MOV DPTR, #TABELA ;aponta para o endereço do começo da tabela
+			CALL CONVERTE ;CHAMA A SUBROTINA CONVERTE, PARA CONVERTERMOS O VALOR DE P2 PARA O NUMERO A SER MOSTRADO NO DISP0
+			MOV P1, A ;PASSA O VALOR DA TABELA PARA P1 PARA SER MOSTRADO NO DISP0
+			MOV A, #ATRASO ;tempo para o delay
+			CALL DELAY ;chama a subrotina delay
+			DJNZ R1, INICIO ;
+			JMP $
+CONVERTE:	MOVC A, @A+DPTR ;APONTA NA TABELA A POSIÇÃO DE MEMÓRIA QUE PEGAREMOS O NUM, E PASSA O CONTEUDO
+			RET ;RETORNA AO CODIGO PRINCIPAL
+			
+DELAY:		DJNZ ACC, DELAY
+			RET
+TABELA:		DB 40H, 79H, 24H, 30H, 19H,12H, 02H, 78H, 00H, 10H, 08H, 03H, 46H, 21H, 06H, 0EH
+			END
+				
+;OBS: OS DISPLAYS ESTÃO LIGADOS A PORTA P1, TODOS, O QUE INDICA QUAL USAR SÃO OS BITS END0 E END1
+;SEGUIDOS DO CS EM NIVEL LOGICO ALTO, PARA PODERMOS ACESSAR O DISP

@@ -1,0 +1,96 @@
+Enunciado:
+Faça um programa que identifique a tecla pressionada no keypad
+conectado à porta P0 e a apresente no display 0. A rotina
+para identificar a tecla pressionada é apresentada a seguir;
+este código coloca uma das linhas do teclado (P0.3 a P0.0)
+em nível lógico baixo, uma após a outra. Quando uma das li-
+nhas é colocada em nível lógico baixo, as colunas são tes-
+tadas (P0.6 a P0.4) para verificar se, em alguma delas, '0'
+é lido (observe que a tecla pressionada fecha contato da 
+linha com a coluna). Se '0' for lido, a tecla pressionada
+corresponde àquela combinação de linha e coluna. Modificar
+a tabela da função converte, conforme abaixo.
+
+
+
+;PROGRAMA mostraleds.asm
+
+ATRASO 		EQU	0EFH
+CS			EQU P0.7
+END0		EQU P3.3
+END1		EQU P3.4
+	
+			ORG 0H
+			SETB CS ;SETAR CS PARA USARMOS O DISP
+			CLR END0 ;COLOCAR END0 = '0'
+			CLR END1 ;COLOCAR END1 = '0', PARA USARMOS DISP0 = '00'
+			CALL KEYPAD ;CHAMA KEYPAD PARA LERMOS QUAL TECLA SERÁ APERTADA
+			MOV A, R0 ;JOGAMOS VALOR DE R0 EM A PARA SUBROTINA CONVERTE. R0 RETORNA O VALOR DO BOTÃO PRESSIONADO NO KEYPAD
+			CALL CONVERTE ;SUBROTINA CONVERTE
+			MOV P1, A ;JOGAR VALOR NO DISP0
+			JMP FIM 
+KEYPAD:		ORL P0, #7FH ;ESCREVE '1' NOS 7 PINOS DE P0
+			CLR F0 	;LIMPA FLAG QUE IDENTIFICA TECLA PRESSIONADA
+			MOV R0, #0H ;RO VAI RETORNAR O NUMERO DA TECLA APERTADA
+			
+			;VARRE PRIMEIRA LINHA
+			CLR P0.3 	;COLOCA '0' NA LINHA P0.3
+			CALL COLSCAN ;CHAMA ROTINA PARA VARREDURA DA COLUNA
+			JB F0, FINAL ;SE F0='1', TECLA IDENTIFICADA =>RETORNA
+			
+			;VARRE SEGUNDA LINHA
+			SETB P0.3 ;SETA LINHA P0.3
+			CLR P0.2 ;COLOCA '0' NA LINHA P0.2
+			CALL COLSCAN ;CHAMA ROTINA PARA VARREGURA DA COLUNA
+			JB F0, FINAL ;SE F0='1', TECLA IDENTIFICADA => RETORNA
+			
+			;VARRE TERCEIRA LINHA
+			SETB P0.2 ;SETA LINHA P0.2
+			CLR P0.1 ;COLOCA '0' NA LINHA P0.2
+			CALL COLSCAN ;CHAMA ROTINA PARA VARREDURA DE COLUNA
+			JB F0, FINAL ;SE F0='1', TECLA IDENTIFICADA => RETORNA
+			
+			;VARRE QUARTA LINHA
+			SETB P0.1 ;SETA LINHA P0.1
+			CLR P0.0 ;COLOCA '0' NA LINHA P0.0
+			CALL COLSCAN ;CHAMA ROTINA PARA VARREDURA DE COLUNA
+			JB F0, FINAL ;SE F0='1', TECLA IDENTIFICADA => RETORNA
+			
+			JMP KEYPAD ;SE FLAG F0='0', TECLA NAO IDENTIFICADA => REPETE A VARREDURA
+
+FINAL:		RET
+
+COLSCAN:	JNB P0.6, GOTKEY ;TECLA PRESSIONADA PERTENCE A ESTA COLUNA - RETORNA
+			INC R0
+			JNB P0.5, GOTKEY ;TECLA PRESSIONADA PERTENCE A ESTA COLUNA - RETORNA
+			INC R0
+			JNB P0.4, GOTKEY ;TECLA PRESSIONADA PERTENCE A ESTA COLUNA - RETORNA
+			INC R0
+			RET
+GOTKEY:		SETB F0 ;FAZ F0='1' => TECLA IDENTIFICADA
+			RET
+			
+			;SUBROTINA CONVERTE COM A TABELA MODIFICADA PARA O EX SOLICITADO
+CONVERTE:	INC A
+			MOVC A, @A+PC
+			RET
+TABELA:		DB 79H, 24H, 30H, 19H, 12H, 02H, 78H, 00H, 10H, 08H, 40H, 46H
+;DELAY:		DJNZ ATRASO, DELAY		
+;			RET
+FIM:		JMP FIM			
+			END
+				
+; Subrotina que retorna em R0 o valor do dígito pressionado no teclado do EDSIM51
+; (Obs: retorna A para * e C para #)
+; teclado
+; linhas
+; +----+----+----+
+; | 1 | 2 | 3 | P0.3
+; +----+----+----+
+; | 4 | 5 | 6 | P0.2
+; +----+----|----+
+; | 7 | 8 | 9 | P0.1
+; +----+----+----+
+; | A | 0 | C | P0.0
+; +----+----+----+
+; colunas P0.6 P0.5 P0.4

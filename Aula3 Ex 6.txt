@@ -1,0 +1,52 @@
+Enunciado:
+6) Faça um programa com duas subrotinas. Uma para inser-
+ção de atraso. A outra rotina deve ir acendendo todos os 8
+leds, um a um (da direita para a esquerda) com inserção de
+atraso; quando todos os leds estiverem acesos, ir apagando
+um a um (da esquerda para a direita). Fazer como procedi-
+mento cíclico. 
+
+OBS: Utilizar as instruções RRC e RLC, além de setar, lim-
+par ou testar o flag de carry. Tenha em mente que algumas
+instruções podem afetar o flag de carry.
+
+
+
+
+
+;PROGRAMA mostraleds.asm
+
+ATRASO 		EQU	0EFH
+CS			EQU P0.7
+END0		EQU P3.3
+END1		EQU P3.4
+	
+			ORG 0H
+			CLR CS
+			CLR END0
+			CLR END1
+			MOV R1, #0FFH ;Para deixarmos todos os leds aceso e ir apagando um a um e no fim termos todos apagados
+			MOV R2, #09H ;numero de vezes q vamos rotacionar o led
+			MOV R3, #00H
+			MOV A, R1
+			CALL ROT ;chama rot para rotacionar e ir acendendo kd led
+			JMP $
+				
+ROT:		MOV P1, A ;mov A para P1 
+			CALL DELAY
+			RLC A ;rotaciona A para esquerda joga bit mais significativo em CY e '0' no bit menos significativo
+			JNC COMPARA ;se o carry for diferente de '0' CY = '1' 
+COMPARA:    CLR C ;deixa CY = '0'
+			DJNZ R2, ROT ; decrementa r2 para sabermos quando parar 
+			
+APAGA:		SETB C ;faz CY = '1' para começarmos a rotacionar e ir apagando os leds
+			RRC A ;rotaciona para direita jogando o Carry ('1') no bit mais significativo
+			MOV P1, A ;move A para porta apagar o led
+			CALL DELAY 
+			SETB C	;faz carry CY = '1'
+			JC APAGA ; PULA PARA APAGA!
+			
+			RET
+DELAY:		DJNZ ATRASO, DELAY		
+			RET
+			END

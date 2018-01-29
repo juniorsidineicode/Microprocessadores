@@ -1,0 +1,36 @@
+; Exercício 4
+SENTIDO	EQU 20H					; variável indicativa do sentido da rotação
+STATE	EQU 21H					; variável indicativa de ocorrência de INT1
+
+		ORG 0H					; PC=0 depois de reset
+		JMP INICIO
+		
+		ORG 03H					; tratamento da INT0
+		CPL 0H
+		SETB P3.2
+		RETI
+
+		ORG 13H					; tratamento da INT1
+		CPL 8H
+		SETB P3.3
+		RETI
+
+INICIO:	MOV IE, #10000101B		; Habilita a Interrupção Externa 0 e 1 (EA=1, EX1=1, EX0=1)
+		SETB IT0				; Interrupção externa 0 por borda de descida
+		SETB IT1				; Interrupção externa 1 por borda de descida
+		MOV SENTIDO, #0H		; Rotação para direita (20H=0) e esquerda (20H=1)
+		MOV R0, #SENTIDO
+		MOV R1, #STATE
+		MOV R2, #01H
+		MOV P1, R2
+VOLTA:	MOV A, P1
+ESPERA:	CJNE @R1, #0, ESPERA
+		CJNE @R0, #0, ESQ
+		RR A
+		JMP PORTA
+ESQ:	RL A
+PORTA:	MOV P1, A
+DELAY:	DJNZ R6, DELAY
+		JMP VOLTA
+
+		END

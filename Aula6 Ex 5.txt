@@ -1,0 +1,75 @@
+ENUNCIADO:
+
+5) Modifique o programa do exercício 3 para que, caso a in-
+terrupção externa 1 seja chamada (e sempre que a mesma 
+ocorrer), o valor seja lido da porta P2 (a ser especificado
+pelo usuário); este valor deve ser utilizado pelo timer0 no
+modo 2 para determinar o valor da contagem de ciclos de 
+instrução realizada pelo timer0. No início do programa, quan-
+do a interrupção externa 1 não tiver sido ainda solicitada,
+enviar os caracteres em intervalos de 640 ciclos de instru-
+ções.
+
+
+
+
+RESET 	EQU 0H
+ITMR0 	EQU 0BH
+IEXT1	EQU 13H
+STATE 	EQU 20H
+
+		ORG RESET
+		JMP INICIO
+		
+		ORG ITMR0 ;LOCAL DO TRATADOR DA INTERRUPÇÃO TIMER0
+		MOV STATE, #01H
+		RETI
+		
+		ORG ITEXT1
+		SETB F0
+		SETB P3.3
+		RETI
+		
+INICIO: MOV IE, #10000110B ;HABILITAR INTERRUPCAO TIMER0, TIMER1 E ENEBLE ALL
+		MOV TMOD, #02H ;TIMER0 MODO 2 00000010b
+		MOV TH0, #080H ; VALORES DE TH0 REABASTECE O TL0 (MODO 2)
+		MOV TL0, #080H ;VAI CONTAR DE 128 A 256 5 VEZES PARA COMPLETAR O CICLO DE 640
+		MOV STATE, #0H 
+		MOV P3, 08H		
+		MOV R0, #STATE ;APONTA PARA STATE
+		MOV DPTR, #TABELA ;APONTA PARA TABELA
+		MOV R1, #0H 
+		MOV R2, #0H ;CONTADOR PARA OS 5 CICLOS DO TIMER0
+		SETB TR0 ;DISPARAR O CONTADOR/TEMPORIZADOR
+		
+VOLTA:	CJNE @R0, #0H, TEST_C ;FICA PRESO ATÉ GERAR INTERRUPÇÕES
+		JNB F0, VOLTA
+		CALL NOVO_C
+		JMP VOLTA
+		
+TEST_C:	MOV STATE, #0H ;5 VOLTAS DA INTERRUPÇÃO DO TIMER0
+		MOV A, TH0
+		CJNE A, #80H, NEXT_C
+		INC R2
+		CJNE R2, #05H, VOLTA
+NEXT_C: MOV R2, #00H
+		MOV A, R1
+		MOVC A, @A+DPTR
+		MOV A, P1
+		INC R1
+		CJNE R1, #16H, VOLTA
+		MOV R1, #00H
+		MOV R2, #00H
+		JMP VOLTA
+		
+NOVO_C: CLR F0
+		MOV R7, P2
+		MOV A, #0FFH ;FUNDO DE ESCALA DE 8 BITS
+		CLR C ;LIMPA FLAG DE CARRY
+		SUBB A, R7 ;A=A-R7
+		MOV TH0, A
+		RET
+		
+TABELA: DB 'Microcontrolador'
+		END
+		

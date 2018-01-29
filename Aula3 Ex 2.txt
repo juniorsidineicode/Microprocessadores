@@ -1,0 +1,37 @@
+Enunciado:
+Modifique o programa para mostra no display 1, o número de
+chaves fechadas. OBS: Para tal, use a instrução RLC A e 
+teste o flag de carry para contaro número de chaves fecha-
+das. Fazer isto ciclicamente.
+
+
+;Programa MOSTRA1.asm
+CS 			EQU P0.7
+END0		EQU P3.3
+END1		EQU P3.4
+
+			ORG 0H 
+			SETB END0 ;END0 E END1 SÃO PARA ESCOLHER O DISPLAY QUE IREMOS MOSTRAR
+			CLR END1 ;END0 E END1 = 10 ESTAMOS NO DISP1
+			SETB CS ;FAZEMOS CS=1 PARA USAR O DECODER E PODER ACESSAR OS DISPLAYS
+INICIO:		MOV A, P2 ;PASSA O VALOR LIDO DAS CHAVES DA PORTA P2 PARA O ACC
+			MOV R1, #08H ;numero de vezes que testaremos, isto é os 8 bits que sao as chaves
+			MOV R2, #00H ;valor do numero de chaves que estão acionadas
+			MOV DPTR, #TABELA ;aponta para o endereço do começo da tabela
+TESTE:		RLC A ;rotaciona A para esquerda isto é deixa o bit (7) no carry
+			JNC SOMA ;desvia para soma se o carry for diferente de 0
+TESTECARRY:	DJNZ R1, TESTE ;decrementa r1 e pula p teste
+			MOV A, R2 ;move o numero de chaves acionadas para o acc
+			CALL CONVERTE ;CHAMA A SUBROTINA CONVERTE, PARA CONVERTERMOS O VALOR DE P2 PARA O NUMERO A SER MOSTRADO NO DISP0
+			MOV P1, A ;PASSA O VALOR DA TABELA PARA P1 PARA SER MOSTRADO NO DISP0
+			JMP $
+SOMA:		INC R2 ;incrementa r2 toda vez que o carry não for zero, isto é, toda vez que tiver uma chave acionada que ele ler
+			JMP TESTECARRY ;pula para testar o carry
+CONVERTE:	MOVC A, @A+DPTR ;APONTA NA TABELA A POSIÇÃO DE MEMÓRIA QUE PEGAREMOS O NUM, E PASSA O CONTEUDO
+			RET ;RETORNA AO CODIGO PRINCIPAL
+			
+TABELA:		DB 40H, 79H, 24H, 30H, 19H,12H, 02H, 78H, 00H, 10H, 08H, 03H, 46H, 21H, 06H, 0EH
+			END
+				
+;OBS: OS DISPLAYS ESTÃO LIGADOS A PORTA P1, TODOS, O QUE INDICA QUAL USAR SÃO OS BITS END0 E END1
+;SEGUIDOS DO CS EM NIVEL LOGICO ALTO, PARA PODERMOS ACESSAR O DISP

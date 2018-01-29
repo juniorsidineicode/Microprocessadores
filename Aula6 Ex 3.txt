@@ -1,0 +1,45 @@
+ENUNCIADO:
+
+3) Refaça o programa anterior, utilizando o timer0 no modo2, para que
+cada caractere seja enviado para a porta P1 em intervalos de 640 ci-
+clos de instrução (clock cristal/12). Faça também com que a mensagem
+seja enviada de forma cíclica, ou seja, quando o último caractere for
+enviado, voltar a enviar o primeiro.
+
+RESET 	EQU 0H
+ITMR0 	EQU 0BH
+STATE 	EQU 20H
+
+		ORG RESET
+		JMP INICIO
+		
+		ORG ITMR0 ;LOCAL DO TRATADOR DA INTERRUPÇÃO TIMER0
+		;MOV TH0, #0FDH ;RECARGA DOS VALORES DE TL E TH PARA FUTURAS INTERRUPCOES
+		;MOV TL0, #080H ;SEMPRE FAZER ISSO PARA OS MODOS 0, 1 E 3
+		INC STATE
+		RETI
+		
+INICIO: MOV IE, #10000010B ;HABILITAR INTERRUPCAO TIMER0 E ENEBLE ALL
+		MOV TMOD, #02H ;MODO 2 DO TIMER 0 TEMPORIZADOR E GATE = '0'
+		MOV TH0, #080H ; VALORES PARA CONTAR TH0 reabastece tl0
+		MOV TL0, #080H ; vai contar de 128 a 256 5 vezes para fechar 640 ciclos
+		MOV STATE, #0H ;
+		MOV R0, #STATE
+		MOV DPTR, #TABELA
+		MOV R1, #0
+		SETB TR0 ;DISPARAR O CONTADOR/TEMPORIZADOR
+
+VOLTA:	CJNE @R0, #5, VOLTA ;fica preso até fechar 5 ciclos de conta TL0 isto é 640 ciclos de instrução
+		MOV STATE, #0H
+		MOV A, R1
+		MOVC A, @A+DPTR
+		MOV P1, A
+		INC R1
+		CJNE R1, #16, VOLTA
+		MOV R1, #0H
+		;CLR TR0 ;NÃO LIMPAR PARA CONTINUAR CONTANDO!
+		JMP VOLTA ;PULA PARA VOLTA PARA FAZER CICLICAMENTE!
+
+TABELA: DB 'Microcontrolador'
+		END
+		

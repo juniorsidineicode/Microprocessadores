@@ -1,0 +1,34 @@
+Enunciado:
+5) Há também leds conectados à porta P1. Faça um programa
+com duas subrotinas. Uma para inserção de atraso. A outra
+deve rotacionar um led aceso (OBS: cor do led vai para 
+branco) da direita para a esquerda inserindo atraso entre
+rotações. Fazer como procedimento cíclico. 
+OBS: inibir CS do display. Utilizar instrução RL A.
+
+
+;PROGRAMA mostraleds.asm
+
+ATRASO 		EQU	0EFH
+;CS			EQU P0.7
+	
+			ORG 0H
+;			CLR CS ;não precisa estar no codigo
+			;CLR END0
+			;CLR END1
+			;MOV R1, #00H ;Para deixarmos todos os leds aceso e ir apagando um a um e no fim termos todos apagados
+			MOV R1, #01H ;Para deixarmos 1 led apagado e ir rotacionando ele da direita para esquerda
+			MOV R2, #08H ;numero de vezes q vamos rotacionar o led
+			MOV A, R1
+			CALL ROT
+			JMP $
+				
+ROT:		MOV P1, A 
+			CALL DELAY
+			RL A ;rotaciona o valor de A para esquerda e entra '0' no ultimo bit.
+			;INC A ;Manter essa linha caso queira que todos os leds se apaguem, se quiser rotacionar retirar essa linha
+			DJNZ R2, ROT
+			RET
+DELAY:		DJNZ ATRASO, DELAY
+			RET
+			END

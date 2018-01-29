@@ -1,0 +1,49 @@
+ENUNCIADO:
+1) Modificar o programa acima para que também aceite a inter-
+rupção externa 1 (/INT1) acionada por borda de descida. A
+escrita da mensagem na porta P1 pelo acionamento de /INT0
+(como realizado no programa acima) deve ser impedida/permi-
+tida a cada acionamento de /INT1 (ou seja, solicitação da
+/INT1 deve impedir atendimento de /INT0 se estiver habi-
+litada; nova solicitação da /INT1 deve voltar a permitir
+o atendimento da /INT0 se estiver inibida).
+
+
+RESET 	EQU 00H
+ITINT0	EQU 03H ;LOCAL DO TRATADOR EXT0
+ITINT1	EQU 13H ;LOCAL DO TRATADOR EXT1
+STATE1	EQU 20H 
+	
+		ORG	RESET ;PC='0' DPS DO RESET
+		JMP INICIO
+		
+		ORG ITINT0 ;LOCAL DO TRATADOR DE INTERRUPÇÃO EX0
+		JMP HANDLER
+		
+		ORG ITINT1 ;LOCAL DO TRATADOR DE INTERRUPÇÃO EX1
+		JMP BLOQ
+		
+INICIO: MOV IE, #10000101B ;HABILITA INT
+		SETB IT0 ;BORDA DESCIDA
+		SETB IT1 ;BORDA DESCIDA
+		
+		MOV STATE1, #00H ;INICIALIZAÇÃO
+		MOV R0, #STATE1 ;R0 ='20H'
+		MOV DPTR, #TABELA ;APONTA PARA O ENDEREÇO DA TABELA
+		MOV R1, #00H 
+VOLTA:  CJNE @R0, #1, VOLTA ;ENQUANTO O ENDEREÇO DE R0 NÃO FOR 1 ELE FICA TRANCADO
+		MOV STATE1, #00H
+		MOV A, R1
+		MOVC A, @A+DPTR
+		MOV P1, A
+		INC R1
+		CJNE R1, #16, VOLTA
+		JMP $
+HANDLER: MOV STATE1, #1H ;COLOCA STATE1='1'
+		 RETI 
+BLOQ:	CPL EX0 ;DESABILITA/HABILITA A INTERRUPÇÃO EXT0
+		RETI
+TABELA: DB 'Microcontrolador'
+		END
+		 
+;INTERRUPÇÃO EXTERNA PORTA 3 -> P3.2 INT0 P3.3 INT1		
